@@ -41,12 +41,6 @@ TeleopTrain::TeleopTrain():
 
 void TeleopTrain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
-	//geometry_msgs::Twist twist;
-	//twist.angular.y = a_scale_*joy->buttons[13];
-	//twist.angular.z = a_scale_*joy->buttons[14];
-	//twist.linear.x = 1-(l_scale_*joy->axes[linear_x_] + 0.5);
-	//twist.linear.y = 1-(l_scale_*joy->axes[linear_y_] + 0.5);
-	//vel_pub_.publish(twist);
 	
 	train::cmd_aux msg;
 	if ((1 - (l_scale_*joy->axes[linear_x_] + 0.5)) > 0 )
