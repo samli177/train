@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/Joy.h>
+#include <train/cmd_aux.h>
 
 class TeleopTrain
 {
@@ -33,19 +34,48 @@ TeleopTrain::TeleopTrain():
 	nh_.param("scale_angular", a_scale_, a_scale_);
 	nh_.param("scale_linear", l_scale_, l_scale_);
 
-	vel_pub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1, true);
+	vel_pub_ = nh_.advertise<train::cmd_aux>("cmd_aux", 1, true);
 	joy_sub_ = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &TeleopTrain::joyCallback, this);
 
 }
 
 void TeleopTrain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
-	geometry_msgs::Twist twist;
-	twist.angular.y = a_scale_*joy->buttons[13];
-	twist.angular.z = a_scale_*joy->buttons[14];
-	twist.linear.x = 1-(l_scale_*joy->axes[linear_x_] + 0.5);
-	twist.linear.y = 1-(l_scale_*joy->axes[linear_y_] + 0.5);
-	vel_pub_.publish(twist);
+	//geometry_msgs::Twist twist;
+	//twist.angular.y = a_scale_*joy->buttons[13];
+	//twist.angular.z = a_scale_*joy->buttons[14];
+	//twist.linear.x = 1-(l_scale_*joy->axes[linear_x_] + 0.5);
+	//twist.linear.y = 1-(l_scale_*joy->axes[linear_y_] + 0.5);
+	//vel_pub_.publish(twist);
+	
+	train::cmd_aux msg;
+	if ((1 - (l_scale_*joy->axes[linear_x_] + 0.5)) > 0 )
+	{
+		if (!joy->buttons[14])
+		{
+			msg.front_leg_vel =  -(1 - (l_scale_*joy->axes[linear_x_] + 0.5));
+		}
+
+		if (!joy->buttons[13])
+		{
+			msg.back_leg_vel =   -(1 - (l_scale_*joy->axes[linear_x_] + 0.5));
+		}
+	}
+	else
+	{
+		if (!joy->buttons[14])
+		{
+			msg.front_leg_vel = 1-(l_scale_*joy->axes[linear_y_] + 0.5);
+		}
+
+		if (!joy->buttons[13])
+		{
+			msg.back_leg_vel = 1-(l_scale_*joy->axes[linear_y_] + 0.5);
+		}
+
+	}
+
+	vel_pub_.publish(msg);	
 }
 
 int main(int argc, char** argv)
