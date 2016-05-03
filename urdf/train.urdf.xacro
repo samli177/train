@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="train">
+	<xacro:include filename="$(find turtlebot_description)/urdf/train/leg.urdf.xacro"/>
+
+	<xacro:property name="width" value=".3" />
+	<xacro:property name="length" value=".4" />
+	<xacro:property name="leg_angle" value="0.75" />
+	<xacro:property name="wheeldiam" value=".07" />
+	<xacro:property name="M_PI" value="3.14159265" />
+	
+
+
+
+
+<xacro:macro name="train">
+ <link name="base_footprint"/>
+    <!--
+       Base link is set at the bottom of the base mould.
+       This is done to be compatible with the way base link
+       was configured for turtlebot 1. Refer to
+       
+       https://github.com/turtlebot/turtlebot/issues/40
+       
+       To put the base link at the more oft used wheel
+       axis, set the z-distance from the base_footprint
+       to 0.352.
+      -->
+    <joint name="base_joint" type="fixed">
+      <origin xyz="0 0 0.22" rpy="0 0 0" />
+      <parent link="base_footprint"/>
+      <child link="base_link" />
+    </joint>
+ <link name="base_link">
+  <visual>
+   <geometry>
+    <box size="${length} ${width} 0.05" />
+   </geometry>
+   <material name="blue">
+    <color rgba="0 0 1 1"/>
+   </material>
+  </visual>
+ </link>
+ 
+ <link name="front_axle">
+  <visual>
+   <geometry>
+    <cylinder radius="0.01" length="${width}"/>
+   </geometry>
+   <origin rpy="1.57075 0 0" xyz="0.0 0.0 0.0"/>
+   <material name="white">
+    <color rgba="1 1 1 1"/>
+   </material>
+  </visual>
+ </link>
+ <joint name="base_to_front_axle" type="revolute">
+  <axis xyz="0 -1 0"/>
+  <limit effort="1000.0" lower="0" upper="6.28318" velocity="0.5"/>
+  <origin rpy="0 -${leg_angle} 0" xyz="${length/2} 0 0"/>
+  <parent link="base_link"/>
+  <child link="front_axle"/>
+ </joint>
+
+ <link name="rear_axle">
+  <visual>
+   <geometry>
+    <cylinder radius="0.01" length="${width}"/>
+   </geometry>
+   <origin rpy="1.57075 0 0" xyz="0.0 0.0 0.0"/>
+   <material name="white"/>
+  </visual>
+ </link>
+ <joint name="base_to_rear_axle" type="revolute">
+  <axis xyz="0 1 0"/>
+  <limit effort="1000.0" lower="0" upper="6.28318" velocity="0.5"/>
+  <origin rpy="0 ${leg_angle} 0" xyz="-${length/2} 0 0"/>
+  <parent link="base_link"/>
+  <child link="rear_axle"/>
+ </joint>
+
+
+<xacro:leg prefix="front" suffix="right" leg_y="${width/2}" reflect="-1"/>
+<xacro:leg prefix="front" suffix="left" leg_y="-${width/2}" reflect="-1"/>
+<xacro:leg prefix="rear" suffix="right" leg_y="${width/2}" reflect="1"/>
+<xacro:leg prefix="rear" suffix="left" leg_y="-${width/2}" reflect="1"/>
+
+
+</xacro:macro>
+</robot>
