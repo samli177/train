@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure
   message_generation
   sensor_msgs
+  tf
 )
 
 ## System dependencies are found with CMake's conventions
@@ -134,6 +135,7 @@ include_directories(
 add_executable(teleop_xbox_aux src/teleop_xbox_aux.cpp)
 add_executable(base_controller src/base_controller.cpp)
 add_executable(aux_controller src/aux_controller.cpp)
+add_executable(state_publisher src/state_publisher.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -149,6 +151,10 @@ target_link_libraries(base_controller
 )
 
 target_link_libraries(aux_controller
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(state_publisher
   ${catkin_LIBRARIES}
 )
 
