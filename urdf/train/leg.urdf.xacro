@@ -5,9 +5,9 @@
  <link name="${prefix}_${suffix}_leg">
   <visual>
    <geometry>
-    <box size="0.02 .05 .1"/>
+    <box size="0.05 .05 ${leg}"/>
    </geometry>
-   <origin rpy="0 0 0" xyz="0.0 0.0 0.05"/>
+   <origin rpy="0 0 0" xyz="0.0 0.0 ${leg/2}"/>
    <material name="white">
     <color rgba="1 1 1 1"/>
    </material>
@@ -15,7 +15,7 @@
  </link>
  <joint name="base_to_${prefix}_${suffix}_leg" type="fixed">
   <axis xyz="1 0 0"/>
-  <origin rpy="0 3.1415 1.57075" xyz="0 ${leg_y} 0"/>
+  <origin rpy="0 3.1415 1.57075" xyz="0 ${leg_y*((width/2)+0.025)} 0"/>
   <parent link="${prefix}_axle"/>
   <child link="${prefix}_${suffix}_leg"/>
  </joint>
@@ -23,16 +23,16 @@
  <link name="${prefix}_${suffix}_lowleg">
   <visual>
    <geometry>
-    <box size="0.02 .05 .05"/>
+    <box size="0.04 .05 ${lowleg}"/>
    </geometry>
-   <origin rpy="0 0 0" xyz="0.0 0.0 0.025"/>
+   <origin rpy="0 0 0" xyz="0.0 0.0 ${lowleg/2}"/>
    <material name="white"/>
   </visual>
  </link>
  <joint name="leg_to_${prefix}_${suffix}_lowleg" type="continuous">
   <axis xyz="${reflect} 0 0"/>
   <limit effort="1000.0" velocity="0.5"/>
-  <origin rpy="0 0 0" xyz="0.0 0.0 0.1"/>
+  <origin rpy="0 0 0" xyz="${leg_y*-1*0.04} 0.0 ${leg}"/>
   <parent link="${prefix}_${suffix}_leg"/>
   <child link="${prefix}_${suffix}_lowleg"/>
   <mimic joint="base_to_${prefix}_axle" multiplier="1" offset="${leg_angle}"/> 
@@ -50,7 +50,7 @@
  <joint name="leg_to_${prefix}_${suffix}_turnleg" type="revolute">
   <axis xyz="0 0 1"/>
   <limit effort="1000.0" lower="-3.1415" upper="3.1415" velocity="0.5"/>
-  <origin rpy="0 0 0" xyz="0.0 0.0 0.05"/>
+  <origin rpy="0 0 0" xyz="0.0 0.0 ${lowleg}"/>
   <parent link="${prefix}_${suffix}_lowleg"/>
   <child link="${prefix}_${suffix}_turnleg"/>
  </joint>
@@ -58,7 +58,7 @@
  <link name="${prefix}_${suffix}_wheel">
     <visual>
       <geometry>
-        <cylinder length=".05" radius="${wheeldiam/2}"/>
+        <mesh filename="package://train/urdf/meshes/hjul.stl" />
       </geometry>
       <material name="black">
         <color rgba="0 0 0 1"/>

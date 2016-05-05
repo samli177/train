@@ -1,13 +1,14 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="train">
-	<xacro:include filename="$(find turtlebot_description)/urdf/train/leg.urdf.xacro"/>
+	<xacro:include filename="$(find train)/urdf/train/leg.urdf.xacro"/>
 
 	<xacro:property name="width" value=".3" />
 	<xacro:property name="length" value=".4" />
 	<xacro:property name="leg_angle" value="0.75" />
 	<xacro:property name="wheeldiam" value=".07" />
 	<xacro:property name="M_PI" value="3.14159265" />
-	
+	<xacro:property name="leg" value=".117" />
+        <xacro:property name="lowleg" value=".041" />
 
 
 
@@ -55,7 +56,7 @@
  <joint name="base_to_front_axle" type="revolute">
   <axis xyz="0 -1 0"/>
   <limit effort="1000.0" lower="0" upper="6.28318" velocity="0.5"/>
-  <origin rpy="0 -${leg_angle} 0" xyz="${length/2} 0 0"/>
+  <origin rpy="0 -${leg_angle} 0" xyz="${.255/2} 0 0"/>
   <parent link="base_link"/>
   <child link="front_axle"/>
  </joint>
@@ -72,16 +73,16 @@
  <joint name="base_to_rear_axle" type="revolute">
   <axis xyz="0 1 0"/>
   <limit effort="1000.0" lower="0" upper="6.28318" velocity="0.5"/>
-  <origin rpy="0 ${leg_angle} 0" xyz="-${length/2} 0 0"/>
+  <origin rpy="0 ${leg_angle} 0" xyz="-${.272/2} 0 0"/>
   <parent link="base_link"/>
   <child link="rear_axle"/>
  </joint>
 
 
-<xacro:leg prefix="front" suffix="right" leg_y="${width/2}" reflect="-1"/>
-<xacro:leg prefix="front" suffix="left" leg_y="-${width/2}" reflect="-1"/>
-<xacro:leg prefix="rear" suffix="right" leg_y="${width/2}" reflect="1"/>
-<xacro:leg prefix="rear" suffix="left" leg_y="-${width/2}" reflect="1"/>
+<xacro:leg prefix="front" suffix="right" leg_y="1" reflect="-1"/>
+<xacro:leg prefix="front" suffix="left" leg_y="-1" reflect="-1"/>
+<xacro:leg prefix="rear" suffix="right" leg_y="1" reflect="1"/>
+<xacro:leg prefix="rear" suffix="left" leg_y="-1" reflect="1"/>
 
 
 </xacro:macro>

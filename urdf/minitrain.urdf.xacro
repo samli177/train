@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="train">
+	<xacro:include filename="$(find turtlebot_description)/urdf/train/minileg.urdf.xacro"/>
+
+	<xacro:property name="width" value=".193" />
+	<xacro:property name="length" value=".207" />
+	<xacro:property name="leg_angle" value="0.75" />
+	<xacro:property name="wheeldiam" value=".03" />
+	<xacro:property name="M_PI" value="3.14159265" />
+	
+<xacro:macro name="minitrain">
+ <link name="base_footprint"/>
+    <!--
+       Base link is set at the bottom of the base mould.
+       This is done to be compatible with the way base link
+       was configured for turtlebot 1. Refer to
+       
+       https://github.com/turtlebot/turtlebot/issues/40
+       
+       To put the base link at the more oft used wheel
+       axis, set the z-distance from the base_footprint
+       to 0.352.
+      -->
+    <joint name="base_joint" type="fixed">
+      <origin xyz="0 0 ${0.112+0.015}" rpy="0 0 0" />
+      <parent link="base_footprint"/>
+      <child link="base_link" />
+    </joint>
+ <link name="base_link">
+  <visual>
+   <geometry>
+    <box size="${length} ${width} 0.005" />
+   </geometry>
+   <material name="blue">
+    <color rgba="0 0 1 1"/>
+   </material>
+  </visual>
+ </link>
+
+<xacro:minileg prefix="front" suffix="right" leg_x="${length/2}" leg_y="${width/2}" reflect="-1.57075"/>
+<xacro:minileg prefix="front" suffix="left" leg_x="${length/2}" leg_y="-${width/2}" reflect="1.57075"/>
+<xacro:minileg prefix="rear" suffix="right" leg_x="-${length/2}" leg_y="${width/2}" reflect="-1.57075"/>
+<xacro:minileg prefix="rear" suffix="left" leg_x="-${length/2}" leg_y="-${width/2}" reflect="1.57075"/>
+
+
+</xacro:macro>
+</robot>

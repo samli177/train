@@ -80,7 +80,7 @@ Wheel::Wheel(int initial_angle, int initial_speed, double pos_x, double pos_y)
 
 	// dynamic reconfigure should overwrite theese
 	center_speed_bias_ = 0; 
-	speed_scale_ = 0;
+	speed_scale_ = 1;
 }
 
 int Wheel::get_angle()
@@ -139,17 +139,20 @@ void Wheel::move(const geometry_msgs::Twist &twist_aux)
 	double phi = atan2(pos_y_, pos_x_);
 	double r = sqrt(pos_x_ * pos_x_ + pos_y_ * pos_y_);
 
-	if(abs(twist_aux.angular.z) > 0.1)
+	// ROS_INFO("Twist angular z %f", twist_aux.angular.z);
+
+	if(fabs(twist_aux.angular.z) > 0.05)
 	{
 		// TODO: scaling?
-		//vel_x += twist_aux.angular.z*r*cos(phi+3.14/2);
-		//vel_y += twist_aux.angular.z*r*sin(phi+3.14/2);
+		vel_x += twist_aux.angular.z*r*cos(phi+3.14/2);
+		vel_y += twist_aux.angular.z*r*sin(phi+3.14/2);
+		// ROS_INFO("vel_x = %f	vel_y = %f", vel_x, vel_y);
 	}
 
 	double trans_vel = sqrt(vel_x * vel_x + vel_y * vel_y);
 	double steer;
 	// calculate wheel steer
-	if ((vel_x != 0 && vel_y != 0) || abs(vel_x + vel_y) > 0.2 )
+	if ((vel_x != 0 && vel_y != 0) || fabs(vel_x + vel_y) > 0.1 ) // TODO: add dead zone?
 	{
 		steer = atan2(vel_y, vel_x); 
 	}
@@ -180,7 +183,7 @@ void Wheel::move(const geometry_msgs::Twist &twist_aux)
 
 
 	// calculate wheel speed
-	if(twist_aux.linear.x == 0)
+	if(fabs(trans_vel) < 0.1)
 	{
 		set_speed(0);
 	}

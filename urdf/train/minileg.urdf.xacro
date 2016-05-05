@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<robot name="leg" xmlns:xacro="http://ros.org/wiki/xacro">
+
+<xacro:macro name="minileg" params="prefix suffix leg_x leg_y reflect">
+<joint name="base_to_${prefix}_${suffix}_leg" type="fixed">
+  <axis xyz="1 0 0"/>
+  <origin rpy="0 3.1415 ${reflect}" xyz="${leg_x} ${leg_y} 0"/>
+  <parent link="base_link"/>
+  <child link="${prefix}_${suffix}_leg"/>
+</joint>
+<link name="${prefix}_${suffix}_leg">
+  <visual>
+   <geometry>
+    <box size="0.01 .02 .077"/>
+   </geometry>
+   <origin rpy="0 0 0" xyz="0.0 0.0 ${0.077/2}"/>
+   <material name="white">
+    <color rgba="1 1 1 1"/>
+   </material>
+  </visual>
+ </link>
+
+
+ <joint name="leg_to_${prefix}_${suffix}_turnleg" type="revolute">
+  <axis xyz="0 0 1"/>
+  <limit effort="1000.0" lower="-3.1415" upper="3.1415" velocity="0.5"/>
+  <origin rpy="0 0 0" xyz="0 0.0 0.077"/>
+  <parent link="${prefix}_${suffix}_leg"/>
+  <child link="${prefix}_${suffix}_turnleg"/>
+ </joint>
+ <link name="${prefix}_${suffix}_turnleg">
+  <visual>
+   <geometry>
+    <box size="0.01 .02 .0345"/>
+   </geometry>
+   <origin rpy="0 0 0" xyz="-${0.007+0.005} 0 ${0.0345/2}"/>
+   <material name="blue"/>
+  </visual>
+ </link>
+
+
+  <joint name="${prefix}_${suffix}_wheel_joint" type="continuous">
+    <axis xyz="0 0 1"/>
+    <parent link="${prefix}_${suffix}_turnleg"/>
+    <child link="${prefix}_${suffix}_wheel"/>
+    <origin rpy="0 1.57075 0" xyz="${(0.0215/2)-0.007} 0 0.0345"/>
+    <limit effort="100" velocity="100"/>
+    <joint_properties damping="0.0" friction="0.0"/>
+  </joint>
+ <link name="${prefix}_${suffix}_wheel">
+    <visual>
+      <geometry>
+        <cylinder length=".0215" radius="${wheeldiam/2}"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+
+
+</xacro:macro>
+</robot>

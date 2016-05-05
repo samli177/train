@@ -1,0 +1,8 @@
+<launch>
+	<node pkg="train" name="base_controller" type="base_controller" output="screen"/>
+	<node pkg="train" name="aux_controller" type="aux_controller" />
+	<node pkg="train" name="teleop_xbox_aux" type="teleop_xbox_aux" />
+	<node pkg="mini_train" name="teleop_xbox" type="teleop_xbox" />
+	<node pkg="joy" name="joy_node" type="joy_node" />
+
+</launch>
