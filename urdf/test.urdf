@@ -44,7 +44,7 @@
   </link>
   <joint name="base_to_front_axle" type="revolute">
     <axis xyz="0 -1 0"/>
-    <limit effort="1000.0" lower="0" upper="6.28318" velocity="0.5"/>
+    <limit effort="1000.0" lower="-6.28318" upper="6.28318" velocity="0.5"/>
     <origin rpy="0 -0.75 0" xyz="0.1275 0 0"/>
     <parent link="base_link"/>
     <child link="front_axle"/>
@@ -60,7 +60,7 @@
   </link>
   <joint name="base_to_rear_axle" type="revolute">
     <axis xyz="0 1 0"/>
-    <limit effort="1000.0" lower="0" upper="6.28318" velocity="0.5"/>
+    <limit effort="1000.0" lower="-6.28318" upper="6.28318" velocity="0.5"/>
     <origin rpy="0 0.75 0" xyz="-0.136 0 0"/>
     <parent link="base_link"/>
     <child link="rear_axle"/>

@@ -31,38 +31,43 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
-#include <tf/transform_broadcaster.h>
+//#include <tf/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
+#include <tf/transform_listener.h>
 
 //#include "std_msgs/String.h"
 //#include <sstream>
 //#include <iostream>
 
 #include <std_msgs/UInt16.h>
+#include <train/wheel_angles.h>
+#include <train/wheel_vel.h>
 //#include <math.h>
 #include <dynamic_reconfigure/server.h>
 #include <train/base_controllerConfig.h>
 
 
-ros::Publisher servo_pub;
-ros::Publisher servo_angle_pub;
+ros::Publisher servo_pub; // deprecated
+ros::Publisher servo_angle_pub; // deprecated
+ros::Publisher wheel_angles_pub; 
+ros::Publisher wheel_vel_pub;
 
 // TODO: change from using static pos_x and pos_y to using tf
 class Wheel
 {
 public:
-	Wheel(int initial_angle, int initial_speed, double pos_x, double pos_y);
+	Wheel(int initial_angle);
 	void move(const geometry_msgs::Twist &twist_aux);
 	int get_speed();
 	int get_angle();
 	int get_center_speed_bias();
 	double get_speed_scale();
 
-
 	void set_speed(int speed);
 	void set_angle(int angle);
 	void set_center_speed_bias(int center_speed_bias);
 	void set_speed_scale(double speed_scale);
+	void set_orientation(double x, double y);
 
 private:
 	int speed_, angle_;
@@ -71,12 +76,14 @@ private:
 	double speed_scale_;
 };
 
-Wheel::Wheel(int initial_angle, int initial_speed, double pos_x, double pos_y)
+Wheel::Wheel(int initial_angle)
 {
 	angle_ = initial_angle;
-	speed_ = initial_speed;
-	pos_x_ = pos_x;
-	pos_y_ = pos_y;
+	speed_ = 0;
+
+	// init to 0 for now...
+	pos_x_ = 0; 
+	pos_y_ = 0; 
 
 	// dynamic reconfigure should overwrite theese
 	center_speed_bias_ = 0; 
@@ -128,6 +135,11 @@ void Wheel::set_speed_scale(double speed_scale)
 	speed_scale_ = speed_scale;
 }
 
+void Wheel::set_orientation(double x, double y)
+{
+	pos_x_ = x;
+	pos_y_ = y;
+}
 
 void Wheel::move(const geometry_msgs::Twist &twist_aux)
 {
@@ -193,26 +205,42 @@ void Wheel::move(const geometry_msgs::Twist &twist_aux)
 		set_speed(1500 + get_center_speed_bias() + 200*motor_direction*get_speed_scale()*trans_vel);
 	}	
 
-	ROS_INFO("Angle: %d	Speed: %d", get_angle(), get_speed());
+	ROS_INFO("Angle: %d	Speed: %d	X-pos: %f", get_angle(), get_speed(), pos_x_);
 
 }	
 
 
 // Create wheel objects
-Wheel wheel_front_right(90, 0, 0.25, 0.25);
+Wheel wheel_front_right(90);
+Wheel wheel_front_left(90);
+Wheel wheel_back_right(90);
+Wheel wheel_back_left(90);
+
 
 void callback(train::base_controllerConfig &config, uint32_t level)
 {
-	ROS_INFO("Front wheel offset updated to: %d", config.front_wheel_center_bias);
-	ROS_INFO("Front wheel velocity scale updated to: %f", config.front_wheel_velocity_scale);
+	//ROS_INFO("Front wheel offset updated to: %d", config.front_wheel_center_bias);
+	//ROS_INFO("Front wheel velocity scale updated to: %f", config.front_wheel_velocity_scale);
 
-	wheel_front_right.set_center_speed_bias(config.front_wheel_center_bias);
-	wheel_front_right.set_speed_scale(config.front_wheel_velocity_scale);
+	wheel_front_right.set_center_speed_bias(config.front_right_wheel_center_bias);
+	wheel_front_right.set_speed_scale(config.front_right_wheel_velocity_scale);
+
+	wheel_front_left.set_center_speed_bias(config.front_left_wheel_center_bias);
+	wheel_front_left.set_speed_scale(config.front_left_wheel_velocity_scale);
+
+	wheel_back_right.set_center_speed_bias(config.back_right_wheel_center_bias);
+	wheel_back_right.set_speed_scale(config.back_right_wheel_velocity_scale);
+
+	wheel_back_left.set_center_speed_bias(config.back_left_wheel_center_bias);
+	wheel_back_left.set_speed_scale(config.back_left_wheel_velocity_scale);
 }
 
 void cmd_velCallback(const geometry_msgs::Twist &twist_aux)
 {
 	wheel_front_right.move(twist_aux);
+	wheel_front_left.move(twist_aux);
+	wheel_back_right.move(twist_aux);
+	wheel_back_left.move(twist_aux);
 }
 	
 
@@ -221,30 +249,87 @@ int main(int argc, char** argv)
 	ros::init(argc, argv, "base_controller");
 	ros::NodeHandle n;
 
-
+	// set up dynamic reconfigure 
 	dynamic_reconfigure::Server<train::base_controllerConfig> server;
 	dynamic_reconfigure::Server<train::base_controllerConfig>::CallbackType f;
 
 	f = boost::bind(&callback, _1, _2);
 	server.setCallback(f);
 
+	// set up transform listeners
+	tf::TransformListener front_right_listener;
+	tf::TransformListener front_left_listener; 
+	tf::TransformListener back_left_listener;
+	tf::TransformListener back_right_listener;
+
 	servo_pub = n.advertise<std_msgs::UInt16>("wheel_front_right_speed", 100);
-	servo_angle_pub = n.advertise<std_msgs::UInt16>("wheel_front_right_angle", 100);
+
+	servo_angle_pub = n.advertise<std_msgs::UInt16>("wheel_front_right_angle", 100); // deperecated
+	wheel_angles_pub = n.advertise<train::wheel_angles>("wheel_angles", 100); 
+	wheel_vel_pub = n.advertise<train::wheel_vel>("wheel_vel", 100);
+
 	ros::Subscriber cmd_vel_sub = n.subscribe("cmd_vel", 10, cmd_velCallback);
+
 	ros::Rate loop_rate(10);
 
 	while(ros::ok())
 	{
-		// publish to topics
+		// Look up transforms for wheels
+		tf::StampedTransform front_right_transform, front_left_transform,  back_right_transform, back_left_transform;
+		try{
+			front_right_listener.lookupTransform("base_link", "front_right_wheel",  ros::Time(0), front_right_transform);
+			front_left_listener.lookupTransform("base_link", "front_left_wheel", ros::Time(0), front_left_transform);
+			back_right_listener.lookupTransform("base_link", "rear_right_wheel", ros::Time(0), back_right_transform);
+			back_left_listener.lookupTransform("base_link", "rear_left_wheel", ros::Time(0), back_left_transform);
+
+		}
+		catch (tf::TransformException &ex)
+		{
+			ROS_ERROR("%s", ex.what());
+			ros::Duration(1.0).sleep();
+			continue;
+		}	
+
+		// Update wheel positions
+		wheel_front_right.set_orientation(front_right_transform.getOrigin().x(), front_right_transform.getOrigin().y());
+		wheel_front_left.set_orientation(front_left_transform.getOrigin().x(), front_left_transform.getOrigin().y());
+		wheel_back_right.set_orientation(back_right_transform.getOrigin().x(), back_right_transform.getOrigin().y());
+		wheel_back_left.set_orientation(back_left_transform.getOrigin().x(), back_left_transform.getOrigin().y());
+		
+		// ROS_INFO("Wheel x position: %f", transform.getOrigin().x());
+		// ROS_INFO("Wheel y position: %f", transform.getOrigin().y());
+
+		// publish to topics 
+
+		// servo_angle_pub is deprecated, use wheel_angles_pub
+		// ---------------------------------------------------
 		std_msgs::UInt16 msg;
 		msg.data = wheel_front_right.get_angle();
 		servo_angle_pub.publish(msg);
+		// ---------------------------------------------------
 
+		train::wheel_angles angle_msg;
+		angle_msg.front_right = (float)wheel_front_right.get_angle();
+		angle_msg.front_left = (float)wheel_front_left.get_angle();
+		angle_msg.back_right = (float)wheel_back_right.get_angle();
+		angle_msg.back_left = (float)wheel_back_left.get_angle();
+
+		wheel_angles_pub.publish(angle_msg);
+		
+		// servo_pun ins deprecated, use wheel_vel_pub
+		// -------------------------------------------
 		msg.data = wheel_front_right.get_speed();
 		servo_pub.publish(msg);
+		// -------------------------------------------
 		
+		train::wheel_vel vel_msg;
+		vel_msg.front_right = (float)wheel_front_right.get_speed();
+		vel_msg.front_left = (float)wheel_front_left.get_speed();
+		vel_msg.back_right = (float)wheel_back_right.get_speed();
+		vel_msg.back_left = (float)wheel_back_left.get_speed();
+		wheel_vel_pub.publish(vel_msg);
+			
 		ros::spinOnce();
 		loop_rate.sleep();
-
 	}
 }
