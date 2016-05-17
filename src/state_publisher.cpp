@@ -53,7 +53,6 @@ int main(int argc, char** argv) {
     tf::TransformBroadcaster broadcaster;
     ros::Rate loop_rate(30);
 
-
     // message declarations
     geometry_msgs::TransformStamped odom_trans;
     sensor_msgs::JointState joint_state;

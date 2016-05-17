@@ -2,6 +2,7 @@
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/Joy.h>
 #include <train/cmd_aux.h>
+#include <std_msgs/Float64.h>
 
 class TeleopTrain
 {
@@ -15,6 +16,8 @@ private:
 	int linear_x_, linear_y_, angular_z_, angular_y_;
 	double l_scale_, a_scale_;
 	ros::Publisher vel_pub_;
+	ros::Publisher arm_vel_pub_;
+	ros::Publisher motor_voltage_pub_;
 	ros::Subscriber joy_sub_;
 
 };
@@ -35,6 +38,9 @@ TeleopTrain::TeleopTrain():
 	nh_.param("scale_linear", l_scale_, l_scale_);
 
 	vel_pub_ = nh_.advertise<train::cmd_aux>("cmd_aux", 1, true);
+	motor_voltage_pub_ = nh_.advertise<std_msgs::Float64>("motor_voltage", 1, true);
+	arm_vel_pub_ = nh_.advertise<std_msgs::Float64>("arm_vel", 1, true);
+
 	joy_sub_ = nh_.subscribe<sensor_msgs::Joy>("joy", 10, &TeleopTrain::joyCallback, this);
 
 }
@@ -42,34 +48,67 @@ TeleopTrain::TeleopTrain():
 void TeleopTrain::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
 	
-	train::cmd_aux msg;
-	if ((1 - (l_scale_*joy->axes[linear_x_] + 0.5)) > 0 )
+	if (joy->buttons[12])
 	{
-		if (!joy->buttons[14])
+		std_msgs::Float64 arm_vel_msg;
+		if ((1 - (l_scale_*joy->axes[linear_x_] + 0.5)) > 0 )
 		{
-			msg.front_leg_vel =  -(1 - (l_scale_*joy->axes[linear_x_] + 0.5));
+			arm_vel_msg.data =  -(1 - (l_scale_*joy->axes[linear_x_] + 0.5));
+		}
+		else
+		{
+			arm_vel_msg.data = 1-(l_scale_*joy->axes[linear_y_] + 0.5);
+		}
+		
+		arm_vel_pub_.publish(arm_vel_msg);
+
+	}
+	else
+	{	
+		train::cmd_aux msg;
+		if ((1 - (l_scale_*joy->axes[linear_x_] + 0.5)) > 0 )
+		{
+			if (!joy->buttons[14])
+			{
+				msg.front_leg_vel =  -(1 - (l_scale_*joy->axes[linear_x_] + 0.5));
+			}
+
+			if (!joy->buttons[13])
+			{
+				msg.back_leg_vel =   -(1 - (l_scale_*joy->axes[linear_x_] + 0.5));
+			}
+		}
+		else
+		{
+			if (!joy->buttons[14])
+			{
+				msg.front_leg_vel = 1-(l_scale_*joy->axes[linear_y_] + 0.5);
+			}
+
+			if (!joy->buttons[13])
+			{
+				msg.back_leg_vel = 1-(l_scale_*joy->axes[linear_y_] + 0.5);
+			}
+
 		}
 
-		if (!joy->buttons[13])
-		{
-			msg.back_leg_vel =   -(1 - (l_scale_*joy->axes[linear_x_] + 0.5));
-		}
+		vel_pub_.publish(msg);	
+	}
+
+	std_msgs::Float64 motor_voltage_msg;
+
+	if (joy->buttons[4])
+	{
+		motor_voltage_msg.data = 1.0;
 	}
 	else
 	{
-		if (!joy->buttons[14])
-		{
-			msg.front_leg_vel = 1-(l_scale_*joy->axes[linear_y_] + 0.5);
-		}
-
-		if (!joy->buttons[13])
-		{
-			msg.back_leg_vel = 1-(l_scale_*joy->axes[linear_y_] + 0.5);
-		}
-
+		motor_voltage_msg.data = 0;
 	}
 
-	vel_pub_.publish(msg);	
+
+	motor_voltage_pub_.publish(motor_voltage_msg);
+
 }
 
 int main(int argc, char** argv)

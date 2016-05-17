@@ -1,2 +1,3 @@
 float64 front_leg_vel
 float64 back_leg_vel
+float64 motor_voltage

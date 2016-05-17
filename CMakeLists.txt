@@ -54,6 +54,7 @@ find_package(catkin REQUIRED COMPONENTS
 	 Adc.msg
 	 wheel_angles.msg
 	 wheel_vel.msg
+	 wheel_encoder.msg
 )
 
 
@@ -95,6 +96,7 @@ generate_messages(
 generate_dynamic_reconfigure_options(
   cfg/base_controller.cfg
   cfg/state_publisher.cfg
+  cfg/encoder_filter.cfg
  
 )
 
@@ -142,6 +144,7 @@ add_executable(base_controller src/base_controller.cpp)
 add_executable(aux_controller src/aux_controller.cpp)
 add_executable(state_publisher src/state_publisher.cpp)
 add_executable(fake_arduino src/fake_arduino.cpp)
+add_executable(encoder_filter src/encoder_filter.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -165,6 +168,10 @@ target_link_libraries(state_publisher
 )
 
 target_link_libraries(fake_arduino
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(encoder_filter
   ${catkin_LIBRARIES}
 )
 
