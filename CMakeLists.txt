@@ -140,6 +140,7 @@ include_directories(
 
 ## Declare a C++ executable
 add_executable(teleop_xbox_aux src/teleop_xbox_aux.cpp)
+add_executable(teleop_xbox src/teleop_xbox.cpp)
 add_executable(base_controller src/base_controller.cpp)
 add_executable(aux_controller src/aux_controller.cpp)
 add_executable(state_publisher src/state_publisher.cpp)
@@ -172,6 +173,10 @@ target_link_libraries(fake_arduino
 )
 
 target_link_libraries(encoder_filter
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(teleop_xbox
   ${catkin_LIBRARIES}
 )
 

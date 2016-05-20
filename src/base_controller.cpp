@@ -153,7 +153,7 @@ void Wheel::move(const geometry_msgs::Twist &twist_aux)
 
 	// ROS_INFO("Twist angular z %f", twist_aux.angular.z);
 
-	if(fabs(twist_aux.angular.z) > 0.05)
+	if(fabs(twist_aux.angular.z) > 0.01)
 	{
 		// TODO: scaling?
 		vel_x += twist_aux.angular.z*r*cos(phi+3.14/2);
@@ -164,7 +164,7 @@ void Wheel::move(const geometry_msgs::Twist &twist_aux)
 	double trans_vel = sqrt(vel_x * vel_x + vel_y * vel_y);
 	double steer;
 	// calculate wheel steer
-	if ((vel_x != 0 && vel_y != 0) || fabs(vel_x + vel_y) > 0.1 ) // TODO: add dead zone?
+	if ((vel_x != 0 && vel_y != 0) || fabs(vel_x + vel_y) > 0.01 ) // TODO: add dead zone?
 	{
 		steer = atan2(vel_y, vel_x); 
 	}
@@ -195,14 +195,14 @@ void Wheel::move(const geometry_msgs::Twist &twist_aux)
 
 
 	// calculate wheel speed
-	if(fabs(trans_vel) < 0.1)
+	if(fabs(trans_vel) == 0)
 	{
 		set_speed(0);
 	}
 	else
 	{
 		// TODO: don't use hard coded numbers and figure out scaling...
-		set_speed(1500 + get_center_speed_bias() + 200*motor_direction*get_speed_scale()*trans_vel);
+		set_speed(1500 + get_center_speed_bias() + 1000*motor_direction*get_speed_scale()*trans_vel);
 	}	
 
 	ROS_INFO("Angle: %d	Speed: %d	X-pos: %f", get_angle(), get_speed(), pos_x_);

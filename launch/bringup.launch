@@ -2,13 +2,13 @@
 	<arg name="gui" default="False" />
 	<param name="robot_description" command="$(find xacro)/xacro '$(find train)/urdf/train_robot.urdf.xacro'" />
 	<param name="use_gui" value="$(arg gui)"/>
-	<node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+	<node name="state_publisher" pkg="train" type="state_publisher" />
 	<node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
         <node name="rviz" pkg="rviz" type="rviz" args="-d $(find train)/urdf.rviz" required="true" />
 	<node pkg="train" name="base_controller" type="base_controller" output="screen"/>
 	<node pkg="train" name="aux_controller" type="aux_controller" />
 	<node pkg="train" name="teleop_xbox_aux" type="teleop_xbox_aux" />
-	<node pkg="mini_train" name="teleop_xbox" type="teleop_xbox" />
+	<node pkg="train" name="teleop_xbox" type="teleop_xbox" />
 	<node pkg="joy" name="joy_node" type="joy_node" />
 
 </launch>
